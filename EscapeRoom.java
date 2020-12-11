@@ -1,17 +1,24 @@
 
 /*
 * Problem 1: Escape Room
+* Attempt to escape a randomly generated room by inputting text commands
 * 
 * V1.0
 * 10/10/2019
 * Copyright(c) 2019 PLTW to present. All rights reserved
+*
+* @author  Riley Kuhlman
+* @version 0.1
+* @since   2020-12-10 
 */
+
 import java.util.Scanner;
 
 /**
  * Create an escape room game where the player must navigate to the other side
  * of the screen in the fewest steps, while avoiding obstacles and collecting
  * prizes.
+ * This file handles the inputs, while GameGUI handles the visuals and storage of the player location, as well as the random generation
  */
 public class EscapeRoom {
 
@@ -41,15 +48,23 @@ public class EscapeRoom {
   static final int px = 0;
   static final int py = 0;
 
+  // cumulative for all plays of the game
   int score = 0;
 
+  // stores a value -1, 0, or 1, depending on the sign of the last move
+  // They are used to determine the direction the player is facing, used in jump and spring trap commands
   private int lastX = 0;
   private int lastY = 0;
 
   private GameGUI game;
-  boolean play = true;
+  // Store whether the game should continue to be played
+  private boolean play = true; // Setting this to false will exit the game
 
   public EscapeRoom(GameGUI g) {
+    /**
+     * Construct the escape room object
+     * @param GameGUI g: an object that stores the GUI and the player location
+     */
     g.createBoard();
 
     game = g;
@@ -63,9 +78,9 @@ public class EscapeRoom {
 
     GameGUI game = new GameGUI();
     
-
-    String[] validCommands = { "right", "left", "up", "down", "r", "l", "u", "d", "jump", "jr", "jumpleft", "jl",
-        "jumpup", "ju", "jumpdown", "jd", "pickup", "p", "quit", "q", "replay", "help", "?", "spring", "s" };
+    // list all of the valid commands
+    String[] validCommands = { "right", "left", "up", "down", "r", "l", "u", "d", "j", "jump", "jr", "jumpleft", "jl",
+        "jumpup", "ju", "jumpdown", "jd", "pickup", "p", "quit", "q", "replay", "rep", "h", "help", "?", "spring", "s" };
 
     EscapeRoom escapeRoom = new EscapeRoom(game);
     
@@ -78,19 +93,23 @@ public class EscapeRoom {
     play = true;
     while (play) {
       System.out.println("Enter Command: ");
+      // make sure the user enters a valid command
       String command = UserInput.getValidInput(validCommands);
       command = command.toLowerCase();
 
       handleInput(command);
     }
 
+    // when the loop is broken out of, call a function to handle clean up and final displays
     endGame();
   }
 
   public void handleInput(String command) {
     switch (command) {
+      // movement
       case "right":
       case "r":
+        // call the instance function for this game
         attemptMove(m, 0);
         break;
       case "left":
@@ -124,12 +143,14 @@ public class EscapeRoom {
         attemptMove(0, -m * 2);
         break;
 
+      case "j":
       case "jump":
         // jump in the last direction
         score += game.movePlayer(lastX * 2 * m, lastY * 2 * m);
         break;
 
 
+      // Miscellaneous functionality
       case "pickup":
       case "p":
         score += game.pickupPrize();
@@ -140,6 +161,8 @@ public class EscapeRoom {
         score += game.springTrap(lastX * m, lastY * m);
         break;
 
+      // basically ui interaction
+      case "h":
       case "help":
       case "?":
         displayHelp();
@@ -155,37 +178,47 @@ public class EscapeRoom {
         play = false;
         break;
 
+      // Hopefully this should never be called, but just in case
       default:
         System.out.println("That is not a recognized command");
     }
   }
 
   private void displayHelp() {
+    /**
+     * Print information about each of the commands that the player can use
+     */
     System.out.println("Type any of the following commands to navigate the game.");
-    System.out.println("right, left, up, down: if you try to go off grid or bump into wall, score decreases");
+    System.out.println("(R)ight, (L)eft, (U)p, (D)own: Move in the inputted direction. If you try to go off grid or bump into wall, your score decreases");
     System.out.println("Jump over 1 space: you cannot jump over walls");
-    System.out.println("if you land on a trap, spring a trap to increase score: you must first check if there is a trap, if none exists, penalty");
+    System.out.println("(S)pring: If there is a trap in front of you, spring the trap to increase score. If no trap exists, your score decrements.");
     System.out.println("(P)ickup: score increases, if there is no prize, penalty");
     System.out.println("(S)pring: Attempts to spring a trap one space in the direction that you moved last");
-    System.out.println("Help: display all possible commands");
+    System.out.println("(H)elp: display all possible commands");
     System.out.println("(Q)uit: reach the far right wall, the score increases, and the game ends, if the game ended without reaching far right wall, penalty.");
     System.out.println("(Rep)lay: shows number of player steps and resets the board, you or another player can play the same board");
   }
 
   private void attemptMove(int x, int y) {
+    /**
+     * Move the player and store his last moved direction
+     */
+
     score += game.movePlayer(x, y); // for some reason this is sort of delayed in updating playerLoc
     
+    // Only have to store the direction of the last move, not the magnitude
     lastX = sign(x);
     lastY = sign(y);
 
     // check the spot one in front of the same thing
-    game.isTrap(x + lastX * m, y + lastY * m);
+    game.isTrap(x + lastX * m, y + lastY * m); // This will print out the information about whether it is a trap or not
   }
 
 
   public void endGame() {
     score += game.endGame();
 
+    // Display the player's scoring
     System.out.println("score=" + score);
     System.out.println("steps=" + game.getSteps());
   }
@@ -193,6 +226,9 @@ public class EscapeRoom {
   // should probably be in a helpers file
 
   private int sign(int num) {
+    /**
+     * Returns the sign of the inputted number
+     */
     if (num > 0) {
       return 1;
     } 
